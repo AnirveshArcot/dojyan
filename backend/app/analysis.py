@@ -29,7 +29,9 @@ def select_latest_available(forecasts: list[Forecast], cutoff: datetime) -> dict
         if forecast.publish_time > cutoff:
             continue
         existing = selected.get(forecast.start_time)
-        if existing is None or forecast.publish_time > existing.publish_time:
+        if existing is None or forecast.publish_time > existing.publish_time or (
+            forecast.publish_time == existing.publish_time and forecast.generation_mw > existing.generation_mw
+        ):
             selected[forecast.start_time] = forecast
     return selected
 
@@ -49,14 +51,16 @@ def select_forecasts(forecasts: list[Forecast], mode: str, cutoff_time: time | i
             eligible = forecast.publish_time <= selection_cutoff(forecast.start_time, cutoff_time)
         elif mode == "latest":
             eligible = forecast.publish_time <= forecast.start_time
-        elif mode == "vintage":
+        elif mode in {"vintage", "live"}:
             eligible = vintage_time is not None and forecast.publish_time <= vintage_time
         else:
             raise ValueError("Unknown forecast selection mode.")
         if not eligible:
             continue
         existing = selected.get(forecast.start_time)
-        if existing is None or forecast.publish_time > existing.publish_time:
+        if existing is None or forecast.publish_time > existing.publish_time or (
+            forecast.publish_time == existing.publish_time and forecast.generation_mw > existing.generation_mw
+        ):
             selected[forecast.start_time] = forecast
     return selected
 

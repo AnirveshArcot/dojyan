@@ -109,10 +109,7 @@ main {
 }
 .query-pane {
   display: grid;
-  grid-template-columns: minmax(240px, 1.35fr) minmax(145px, 0.8fr) minmax(
-      220px,
-      1.25fr
-    ) auto;
+  grid-template-columns: minmax(220px, 1.25fr) minmax(145px, 0.8fr) minmax(220px, 1.15fr) minmax(105px, 0.5fr) auto;
   align-items: end;
   gap: 8px;
   padding: 7px;
@@ -168,6 +165,34 @@ main {
   margin-top: 4px;
   color: #ffb000;
 }
+.cutoff-override {
+  align-content: start;
+}
+.cutoff-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 27px;
+  border: 1px solid #333;
+  padding: 4px 6px;
+  color: #ffb000;
+  font-size: 11px;
+  cursor: pointer;
+}
+.cutoff-toggle input {
+  width: auto;
+  height: auto;
+  margin: 0;
+  accent-color: #00ffff;
+}
+.cutoff-override output {
+  display: block;
+  height: 27px;
+  border: 1px solid #333;
+  padding: 5px 6px;
+  color: #ffb000;
+  font-size: 11px;
+}
 .command-input:focus,
 .field select:focus,
 .field input:focus {
@@ -201,9 +226,76 @@ main {
 }
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
   gap: 4px;
   margin-bottom: 4px;
+}
+.forecast-board {
+  margin-bottom: 4px;
+}
+.forecast-board-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #333;
+  padding: 4px 7px;
+  color: #00ffff;
+  font-size: 10px;
+}
+.forecast-board-note button {
+  flex: 0 0 auto;
+  border: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  padding: 3px 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.forecast-board-note button:hover {
+  background: #ffb000;
+  color: #000;
+}
+.forecast-board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+}
+.forecast-board-grid button {
+  min-height: 48px;
+  border: 0;
+  border-right: 1px solid #333;
+  border-bottom: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  padding: 4px 6px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.forecast-board-grid button:hover {
+  background: #00ffff;
+  color: #000;
+}
+.forecast-board-grid button:disabled {
+  color: #333;
+  cursor: default;
+}
+.forecast-board-grid span,
+.forecast-board-grid small {
+  display: block;
+  color: #00ffff;
+  font-size: 9px;
+}
+.forecast-board-grid button:hover span,
+.forecast-board-grid button:hover small {
+  color: #000;
+}
+.forecast-board-grid b {
+  display: block;
+  margin: 2px 0;
+  font-weight: 400;
 }
 .metric {
   min-height: 76px;
@@ -312,9 +404,19 @@ main {
   stroke-width: 2;
   stroke-dasharray: 5 4;
 }
-.chart svg rect {
-  fill: transparent;
+.chart svg {
   cursor: crosshair;
+}
+.chart svg .crosshair {
+  stroke: #00ffff;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.chart svg .actual-point {
+  fill: #00ffff;
+}
+.chart svg .forecast-point {
+  fill: #ffb000;
 }
 .chart-key {
   color: #00ffff;
@@ -457,6 +559,9 @@ td:nth-child(n + 3) {
 .status.matched {
   color: #00ff00;
 }
+.status.source_allocated {
+  color: #ffb000;
+}
 .status.forecast_only {
   color: #ffb000;
 }
@@ -465,6 +570,18 @@ td:nth-child(n + 3) {
 }
 .status.missing {
   color: #ff0000;
+}
+.status.eligible {
+  color: #00ff00;
+}
+.status.available_after_cutoff {
+  color: #ffb000;
+}
+.status.published_after_delivery {
+  color: #ff0000;
+}
+tr.selected-vintage td {
+  color: #00ffff;
 }
 .pagination {
   display: flex;
@@ -496,7 +613,9 @@ td:nth-child(n + 3) {
 }
 .calendar-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 7px;
   padding-bottom: 5px;
   border-bottom: 1px solid #333;
   color: #00ffff;

@@ -5,8 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from urllib.parse import urlencode
 
 import httpx
+
+from .cache import DiskResponseCache
 
 
 class ElexonError(RuntimeError):
@@ -80,19 +83,24 @@ def parse_forecasts(records: list[dict[str, Any]]) -> list[Forecast]:
 
 
 class ElexonClient:
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str, cache: DiskResponseCache | None = None) -> None:
         self.base_url = base_url.rstrip("/")
+        self.cache = cache or DiskResponseCache.from_environment()
 
     async def _get_dataset(self, dataset: str, params: dict[str, str]) -> list[dict[str, Any]]:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{self.base_url}/datasets/{dataset}/stream", params=params)
-                response.raise_for_status()
-                return unwrap_records(response.json())
-        except (httpx.HTTPError, ValueError, ElexonError) as exc:
-            if isinstance(exc, ElexonError):
-                raise
-            raise ElexonError("Could not retrieve data from Elexon.") from exc
+        async def fetch() -> list[dict[str, Any]]:
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(f"{self.base_url}/datasets/{dataset}/stream", params=params)
+                    response.raise_for_status()
+                    return unwrap_records(response.json())
+            except (httpx.HTTPError, ValueError, ElexonError) as exc:
+                if isinstance(exc, ElexonError):
+                    raise
+                raise ElexonError("Could not retrieve data from Elexon.") from exc
+
+        cache_key = f"{self.base_url}/datasets/{dataset}/stream?{urlencode(sorted(params.items()))}"
+        return await self.cache.get_or_fetch(cache_key, fetch)
 
     async def actuals(self, start: datetime, end: datetime) -> list[Actual]:
         """Fetch actuals with FUELHH's settlement-date query contract."""
