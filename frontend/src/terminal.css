@@ -1,0 +1,655 @@
+:root {
+  background: #000;
+  color: #ffb000;
+  font-family:
+    "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #000;
+  color: #ffb000;
+  font:
+    12px/1.35 "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    "Courier New",
+    monospace;
+}
+.terminal-shell {
+  min-height: 100vh;
+  padding: 4px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 4px;
+}
+.topbar,
+.tabs,
+.statusbar {
+  border: 1px solid #333;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 7px;
+  gap: 14px;
+  white-space: nowrap;
+}
+.topbar b {
+  color: #00ffff;
+  letter-spacing: 0.08em;
+}
+.topbar span:nth-child(2) {
+  color: #ffb000;
+  flex: 1;
+}
+.online {
+  color: #00ff00;
+}
+.offline {
+  color: #ff0000;
+}
+.topbar button,
+.tabs button,
+.execute,
+.system-message button,
+.pagination button {
+  appearance: none;
+  border: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #00ffff;
+  font: inherit;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+.topbar button:hover,
+.tabs button:hover,
+.tabs button.active,
+.execute:hover,
+.system-message button:hover,
+.pagination button:hover:not(:disabled) {
+  background: #00ffff;
+  color: #000;
+}
+.tabs {
+  padding: 0;
+  gap: 0;
+}
+.tabs button {
+  border-width: 0 1px 0 0;
+  padding: 6px 10px;
+}
+.tabs button.active {
+  color: #000;
+}
+.tabs button:first-child {
+  border-left: 0;
+}
+main {
+  min-width: 0;
+}
+.pane {
+  border: 1px solid #333;
+  background: #000;
+  min-width: 0;
+}
+.pane-title {
+  height: 25px;
+  padding: 5px 7px;
+  border-bottom: 1px solid #333;
+  background: #000;
+  color: #00ffff;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.query-pane {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.35fr) minmax(145px, 0.8fr) minmax(
+      220px,
+      1.25fr
+    ) auto;
+  align-items: end;
+  gap: 8px;
+  padding: 7px;
+  margin-bottom: 4px;
+}
+.field,
+.date-select {
+  display: grid;
+  gap: 3px;
+  color: #00ffff;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.command-input,
+.field select,
+.field input {
+  height: 27px;
+  width: 100%;
+  border: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  padding: 4px 6px;
+  font:
+    12px "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    "Courier New",
+    monospace;
+  outline: 0;
+}
+.command-input {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  cursor: pointer;
+}
+.command-input b {
+  color: #00ffff;
+  animation: blink 1s steps(1, end) infinite;
+}
+.command-input i {
+  margin-left: auto;
+  color: #00ffff;
+  font-style: normal;
+}
+.field select,
+.field input {
+  color: #00ffff;
+}
+.field input {
+  margin-top: 4px;
+  color: #ffb000;
+}
+.command-input:focus,
+.field select:focus,
+.field input:focus {
+  border-color: #00ffff;
+}
+.execute {
+  height: 27px;
+  white-space: nowrap;
+  color: #ffb000;
+  border-color: #ffb000;
+}
+.execute:disabled {
+  color: #333;
+  border-color: #333;
+  cursor: wait;
+}
+.ticker,
+.system-message {
+  border: 1px solid #333;
+  padding: 5px 7px;
+  margin-bottom: 4px;
+  color: #00ffff;
+  font-size: 11px;
+}
+.system-message.error {
+  color: #ff0000;
+}
+.system-message button {
+  float: right;
+  color: #ffb000;
+}
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.metric {
+  min-height: 76px;
+  border: 1px solid #333;
+  padding: 7px;
+  display: flex;
+  flex-direction: column;
+}
+.metric span,
+.metric small {
+  color: #00ffff;
+  font-size: 10px;
+}
+.metric strong {
+  color: #ffb000;
+  font-size: 19px;
+  line-height: 1;
+  margin: auto 0 4px;
+  text-align: right;
+}
+.metric .positive {
+  color: #00ff00;
+}
+.metric .negative {
+  color: #ff0000;
+}
+.terminal-grid {
+  display: grid;
+  gap: 4px;
+}
+.overview-grid {
+  grid-template-columns: 1.05fr 2fr 0.95fr;
+}
+.vintage-grid {
+  grid-template-columns: 1fr 2fr;
+}
+.method-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+.day-list {
+  max-height: 307px;
+  overflow: auto;
+}
+.day-list button,
+.period-list button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 84px 1fr 75px;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-bottom: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  padding: 5px 7px;
+  font:
+    11px "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    "Courier New",
+    monospace;
+  text-align: left;
+  cursor: pointer;
+}
+.day-list button:hover,
+.day-list button.selected,
+.period-list button:hover,
+.period-list button.selected {
+  background: #00ffff;
+  color: #000;
+}
+.day-list i {
+  height: 7px;
+  background: #ffb000;
+}
+.day-list button.selected i {
+  background: #000;
+}
+.day-list b,
+.period-list b {
+  text-align: right;
+  font-weight: 400;
+}
+.chart {
+  position: relative;
+  padding: 6px;
+}
+.chart svg {
+  display: block;
+  width: 100%;
+  height: 249px;
+}
+.chart svg line {
+  stroke: #333;
+  stroke-width: 1;
+}
+.chart svg .actual {
+  fill: none;
+  stroke: #00ffff;
+  stroke-width: 2;
+}
+.chart svg .forecast {
+  fill: none;
+  stroke: #ffb000;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+.chart svg rect {
+  fill: transparent;
+  cursor: crosshair;
+}
+.chart-key {
+  color: #00ffff;
+  font-size: 10px;
+}
+.chart-key b {
+  display: inline-block;
+  width: 17px;
+  border-top: 2px dashed #ffb000;
+  margin: 0 5px 3px 13px;
+}
+.chart-readout {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  border: 1px solid #333;
+  background: #000;
+  color: #ffb000;
+  padding: 5px;
+  font-size: 11px;
+}
+.readout {
+  padding: 7px;
+}
+.readout > b {
+  display: block;
+  font-size: 17px;
+}
+.readout p,
+.method-grid p,
+.vintage-detail p {
+  margin: 8px 0;
+  color: #ffb000;
+}
+.readout strong {
+  color: #00ffff;
+}
+.amber {
+  color: #00ffff !important;
+}
+.positive {
+  color: #00ff00 !important;
+}
+.negative {
+  color: #ff0000 !important;
+}
+.period-list {
+  max-height: 350px;
+  overflow: auto;
+}
+.vintage-date-control {
+  padding: 7px;
+  border-bottom: 1px solid #333;
+}
+.vintage-date-control .date-select {
+  width: 100%;
+}
+.period-list button {
+  grid-template-columns: 1fr 84px;
+}
+.selected-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 7px;
+  border-bottom: 1px solid #333;
+  color: #00ffff;
+  font-size: 11px;
+}
+.quality-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px;
+}
+.quality-toolbar .date-select {
+  width: 230px;
+}
+.status-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.status-filters button {
+  border: 1px solid #333;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  padding: 4px 6px;
+  font:
+    10px "JetBrains Mono",
+    "Fira Code",
+    Consolas,
+    "Courier New",
+    monospace;
+  cursor: pointer;
+}
+.status-filters button.active,
+.status-filters button:hover {
+  background: #ffb000;
+  color: #000;
+}
+.coverage-line {
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  padding: 5px 7px;
+  color: #00ffff;
+  font-size: 10px;
+}
+.table-wrap {
+  overflow: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  font-size: 11px;
+}
+th {
+  padding: 5px 7px;
+  border-bottom: 1px solid #333;
+  color: #00ffff;
+  text-align: left;
+  font-weight: 400;
+}
+td {
+  padding: 4px 7px;
+  border-bottom: 1px solid #333;
+  color: #ffb000;
+  text-align: left;
+}
+th:nth-child(n + 3),
+td:nth-child(n + 3) {
+  text-align: right;
+}
+.status {
+  font-size: 10px;
+}
+.status.matched {
+  color: #00ff00;
+}
+.status.forecast_only {
+  color: #ffb000;
+}
+.status.actual_only {
+  color: #00ffff;
+}
+.status.missing {
+  color: #ff0000;
+}
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px;
+  color: #00ffff;
+  font-size: 10px;
+}
+.pagination div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.pagination button:disabled {
+  color: #333;
+  cursor: default;
+}
+.terminal-calendar {
+  position: absolute;
+  z-index: 10;
+  width: 284px;
+  margin-top: 2px;
+  padding: 7px;
+  border: 1px solid #00ffff;
+  background: #000;
+  color: #ffb000;
+  box-shadow: 0 0 0 1px #000;
+}
+.calendar-top {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #333;
+  color: #00ffff;
+}
+.calendar-top button {
+  border: 0;
+  background: #000;
+  color: #ff0000;
+  font: 16px inherit;
+  cursor: pointer;
+}
+.all-dates {
+  width: 100%;
+  border: 1px solid #333;
+  background: #000;
+  color: #ffb000;
+  margin: 6px 0;
+  padding: 4px;
+  font: 10px inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.all-dates:hover {
+  background: #ffb000;
+  color: #000;
+}
+.calendar-days,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.calendar-days {
+  padding: 6px 0 2px;
+  color: #00ffff;
+  font-size: 9px;
+  text-align: center;
+}
+.calendar-grid i,
+.calendar-grid button {
+  height: 27px;
+}
+.calendar-grid button {
+  border: 0;
+  border-radius: 0;
+  background: #000;
+  color: #ffb000;
+  font: 11px inherit;
+  cursor: pointer;
+}
+.calendar-grid button:hover,
+.calendar-grid button.selected {
+  background: #ffb000;
+  color: #000;
+}
+.calendar-grid button.edge {
+  background: #00ffff;
+  color: #000;
+}
+.calendar-grid button:disabled {
+  color: #333;
+  cursor: not-allowed;
+}
+.calendar-grid button:disabled:hover {
+  background: #000;
+  color: #333;
+}
+.terminal-calendar footer {
+  border-top: 1px solid #333;
+  margin-top: 6px;
+  padding-top: 5px;
+  color: #00ffff;
+  font-size: 10px;
+}
+.statusbar {
+  justify-content: space-between;
+  color: #00ffff;
+  font-size: 10px;
+}
+.statusbar span {
+  color: #ffb000;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (max-width: 1050px) {
+  .query-pane {
+    grid-template-columns: 1fr 1fr;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr 1.4fr;
+  }
+  .overview-grid > .pane:last-child {
+    grid-column: span 2;
+  }
+  .method-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 700px) {
+  body {
+    font-size: 11px;
+  }
+  .terminal-shell {
+    padding: 2px;
+    gap: 2px;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .topbar span:nth-child(2) {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .tabs {
+    overflow: auto;
+  }
+  .tabs button {
+    font-size: 10px;
+  }
+  .query-pane,
+  .overview-grid,
+  .vintage-grid,
+  .method-grid,
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .overview-grid > .pane:last-child {
+    grid-column: auto;
+  }
+  .quality-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .quality-toolbar .date-select {
+    width: 100%;
+  }
+  .selected-row {
+    grid-template-columns: 1fr;
+  }
+  .statusbar span {
+    display: none;
+  }
+  .terminal-calendar {
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+  }
+  .chart svg {
+    height: 210px;
+  }
+}

@@ -1,0 +1,17 @@
+services:
+  api:
+    build: ./backend
+    environment:
+      ELEXON_API_BASE_URL: ${ELEXON_API_BASE_URL:-https://data.elexon.co.uk/bmrs/api/v1}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    ports:
+      - "8000:8000"
+
+  web:
+    build: ./frontend
+    environment:
+      VITE_PROXY_TARGET: http://api:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
