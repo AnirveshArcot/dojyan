@@ -19,6 +19,12 @@ class Auction:
     product_minutes: int
 
     def serialise(self) -> Dict[str, object]:
+        """Return a JSON-ready auction contract for API responses.
+
+        Dataclass serialisation retains the contract fields, while the cutoff
+        clock is converted from Python's ``time`` object to a stable ``HH:MM``
+        UTC string that the frontend can display and reuse.
+        """
         payload = asdict(self)
         payload["cutoff_time_utc"] = self.cutoff_time_utc.strftime("%H:%M")
         return payload
@@ -32,6 +38,12 @@ AUCTIONS: Dict[str, Auction] = {
 
 
 def get_auction(identifier: str) -> Auction:
+    """Resolve a supported auction identifier to its explicit product contract.
+
+    The contract controls presentation duration and the default decision cutoff.
+    An unknown identifier raises immediately, preventing an analysis from using
+    an implicit or arbitrary market format.
+    """
     try:
         return AUCTIONS[identifier]
     except KeyError as exc:

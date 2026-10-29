@@ -15,6 +15,11 @@ from .window import DEFAULT_END, DEFAULT_START, iso, validate_window
 
 
 def _client() -> ElexonClient:
+    """Build the Elexon client using the configured upstream API base URL.
+
+    The client creates its disk cache from environment configuration, keeping
+    route handlers independent of HTTP and cache construction details.
+    """
     return ElexonClient(os.getenv("ELEXON_API_BASE_URL", "https://data.elexon.co.uk/bmrs/api/v1"))
 
 
@@ -27,6 +32,19 @@ async def build_analysis(
     cutoff_hour: Optional[int],
     vintage_time: Optional[datetime],
 ) -> Dict[str, Any]:
+    """Assemble the complete analysis response used by the dashboard.
+
+    The service resolves the selected auction contract and cutoff, retrieves the
+    necessary forecast vintages and historical actuals, then selects one source
+    forecast per source hour according to the requested mode.
+
+    It returns raw half-hour completeness rows, auction-shaped products, and
+    descriptive energy metrics without generating a forecast, bid, or purchase
+    recommendation.
+
+    In live mode, the default delivery date is tomorrow and actuals are omitted
+    because the delivery period has not yet occurred.
+    """
     if mode == "live" and start_date is None:
         start_date = datetime.now(timezone.utc).date() + timedelta(days=1)
     start_date = start_date or DEFAULT_START
@@ -55,6 +73,15 @@ async def build_analysis(
 
 
 async def build_vintages(start_time: datetime, mode: str, cutoff_time: str, vintage_time: Optional[datetime]) -> Dict[str, Any]:
+    """Build the source-vintage audit for the delivery hour containing a product.
+
+    The audit fetches every available WINDFOR publication for one source hour,
+    identifies the record selected by the active mode, and labels each record
+    according to its decision-time availability.
+
+    It exposes post-cutoff and post-delivery records for transparency, but those
+    rows are not treated as information available to a day-ahead buyer.
+    """
     source_target = start_time.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
     now = datetime.now(timezone.utc)
     client = _client()
@@ -65,6 +92,12 @@ async def build_vintages(start_time: datetime, mode: str, cutoff_time: str, vint
     decision_cutoff = selection_cutoff(source_target, cutoff_clock)
 
     def eligibility(row: Forecast) -> str:
+        """Classify a vintage relative to delivery and the active cutoff policy.
+
+        A post-delivery row is never decision-usable.
+        In decision mode, a pre-delivery row after the auction cutoff remains
+        visible but is labelled as unavailable at the decision time.
+        """
         if row.publish_time > source_target:
             return "published_after_delivery"
         if mode == "decision" and row.publish_time > decision_cutoff:

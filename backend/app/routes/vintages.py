@@ -20,6 +20,12 @@ async def vintages(
     cutoff_time: str = Query(default="09:20", pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"),
     vintage_time: Optional[datetime] = Query(default=None),
 ) -> Dict[str, Any]:
+    """Validate vintage-audit parameters and return all source publications.
+
+    The handler stays thin by delegating selection and status classification to
+    the application service.
+    It maps unavailable Elexon data to HTTP 502 for the API consumer.
+    """
     try:
         return await build_vintages(start_time, mode, cutoff_time, vintage_time)
     except ElexonError as exc:

@@ -19,11 +19,17 @@ class MatchedPeriod:
 
     @property
     def error_mw(self) -> float:
+        """Return signed source-resolution error as forecast MW minus actual MW."""
         return self.forecast_mw - self.actual_mw
 
 
 def select_latest_available(forecasts: list[Forecast], cutoff: datetime) -> dict[datetime, Forecast]:
-    """Select the newest forecast published on or before the configured cutoff."""
+    """Select the newest forecast published on or before one absolute cutoff.
+
+    This utility applies the same cutoff to all supplied forecasts.
+    When publication timestamps tie, the higher MW value wins to make selection
+    deterministic rather than dependent on upstream response order.
+    """
     selected: dict[datetime, Forecast] = {}
     for forecast in forecasts:
         if forecast.publish_time > cutoff:
@@ -37,14 +43,26 @@ def select_latest_available(forecasts: list[Forecast], cutoff: datetime) -> dict
 
 
 def selection_cutoff(delivery_time: datetime, cutoff_time: time | int) -> datetime:
-    """Return the explicit day-ahead cutoff for a delivery period."""
+    """Return the UTC day-before cutoff for one delivery timestamp.
+
+    The day-ahead decision is made on the calendar day preceding delivery.
+    An integer cutoff is retained for backward-compatible whole-hour requests.
+    """
     delivery_day = delivery_time.astimezone(timezone.utc).date()
     cutoff_clock = time(cutoff_time) if isinstance(cutoff_time, int) else cutoff_time
     return datetime.combine(delivery_day - timedelta(days=1), cutoff_clock, tzinfo=timezone.utc)
 
 
 def select_forecasts(forecasts: list[Forecast], mode: str, cutoff_time: time | int, vintage_time: datetime | None = None) -> dict[datetime, Forecast]:
-    """Select one auditable forecast per delivery period for the requested analysis mode."""
+    """Select one deterministic source forecast per delivery hour for a mode.
+
+    ``decision`` selects the latest record available by each hour's day-before
+    cutoff, while ``latest`` selects the newest record published before delivery.
+    ``vintage`` and ``live`` select records available no later than the supplied
+    reference timestamp.
+
+    No forecast value is calculated or altered by this function.
+    """
     selected: dict[datetime, Forecast] = {}
     for forecast in forecasts:
         if mode == "decision":
@@ -66,6 +84,12 @@ def select_forecasts(forecasts: list[Forecast], mode: str, cutoff_time: time | i
 
 
 def match_periods(actuals: list[Actual], forecasts: dict[datetime, Forecast]) -> list[MatchedPeriod]:
+    """Pair exact source timestamps that have both actual and selected forecast MW.
+
+    This legacy source-resolution helper does not allocate hourly forecasts into
+    30-minute products.
+    The auction-aware equivalent is ``product_rows``.
+    """
     matched: list[MatchedPeriod] = []
     for actual in actuals:
         forecast = forecasts.get(actual.start_time)
@@ -75,6 +99,11 @@ def match_periods(actuals: list[Actual], forecasts: dict[datetime, Forecast]) ->
 
 
 def calculate_metrics(periods: list[MatchedPeriod]) -> dict[str, float | int | None]:
+    """Calculate legacy MW accuracy metrics for exact source-resolution matches.
+
+    Product-facing dashboard metrics use MWh in ``energy_metrics`` instead.
+    This function remains available for source-level analysis and tests.
+    """
     if not periods:
         return {"matched_periods": 0, "mae_mw": None, "rmse_mw": None, "bias_mw": None, "wape_percent": None}
     errors = [period.error_mw for period in periods]
@@ -90,6 +119,11 @@ def calculate_metrics(periods: list[MatchedPeriod]) -> dict[str, float | int | N
 
 
 def vintage_summary(forecasts: list[Forecast]) -> dict[str, int]:
+    """Count source forecast records and distinct delivery hours with vintages.
+
+    The counts describe data coverage only and do not imply that every vintage
+    passed the selected auction cutoff.
+    """
     periods = defaultdict(set)
     for forecast in forecasts:
         periods[forecast.start_time].add(forecast.publish_time)

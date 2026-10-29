@@ -14,6 +14,15 @@ MAX_WINDOW_DAYS = 62
 
 
 def validate_window(start_date: date, end_date: date) -> Tuple[datetime, datetime]:
+    """Validate an inclusive delivery-date range and return its UTC boundaries.
+
+    The returned end timestamp is exclusive, which lets downstream loops include
+    every half-hour or auction product on the final selected date without a
+    special-case boundary check.
+
+    Requests longer than ``MAX_WINDOW_DAYS`` are rejected before querying Elexon
+    so an accidental broad query cannot create an excessive upstream request.
+    """
     if start_date > end_date:
         raise HTTPException(status_code=422, detail="The delivery start date must not be after the end date.")
     if (end_date - start_date).days + 1 > MAX_WINDOW_DAYS:
@@ -23,4 +32,9 @@ def validate_window(start_date: date, end_date: date) -> Tuple[datetime, datetim
 
 
 def iso(value: Optional[datetime]) -> Optional[str]:
+    """Format an optional UTC timestamp as an API-safe ISO 8601 ``Z`` string.
+
+    ``None`` remains ``None`` to distinguish missing source timing information
+    from a valid timestamp in JSON responses.
+    """
     return value.isoformat().replace("+00:00", "Z") if value else None

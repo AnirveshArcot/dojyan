@@ -11,7 +11,16 @@ from .window import iso
 
 
 def serialise_periods(actuals: List[Actual], selected: Dict[datetime, Forecast], start: datetime, end: datetime) -> List[Dict[str, Any]]:
-    """Return source-resolution completeness rows without inventing forecasts."""
+    """Create half-hour source-data completeness rows for the requested window.
+
+    FUELHH actuals are natively half-hourly, whereas WINDFOR is hourly.
+    This function deliberately matches a forecast only at its exact source start
+    time and marks the other half-hour as actual-only instead of inventing a
+    second forecast value.
+
+    The result powers the data-quality view rather than the selected auction
+    product grid.
+    """
     actual_by_time = {actual.start_time: actual for actual in actuals}
     rows: List[Dict[str, Any]] = []
     cursor = start
@@ -32,7 +41,17 @@ def serialise_periods(actuals: List[Actual], selected: Dict[datetime, Forecast],
 
 
 def product_rows(actuals: List[Actual], selected: Dict[datetime, Forecast], start: datetime, end: datetime, auction: Auction) -> List[Dict[str, Any]]:
-    """Format source values into an auction grid without modelling new forecasts."""
+    """Translate selected source records into the chosen auction-product grid.
+
+    For a 60-minute auction, two FUELHH half-hour actuals are summed and one
+    WINDFOR hourly MW rate becomes one hourly MWh value.
+    For a 30-minute auction, the source hourly MW rate is multiplied by 0.5 for
+    each constituent product and labelled ``source_allocated``.
+
+    The allocation is transparent unit conversion, not a new half-hour forecast.
+    Each row retains source interval, publication, actual availability, and error
+    fields so a user can audit exactly what was displayed.
+    """
     actual_by_time = {actual.start_time: actual for actual in actuals}
     rows: List[Dict[str, Any]] = []
     cursor = start

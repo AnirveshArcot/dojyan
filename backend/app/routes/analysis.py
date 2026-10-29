@@ -23,6 +23,13 @@ async def analysis(
     cutoff_hour: Optional[int] = Query(default=None, ge=0, le=23),
     vintage_time: Optional[datetime] = Query(default=None),
 ) -> Dict[str, Any]:
+    """Validate analysis query parameters and return the dashboard payload.
+
+    FastAPI validates mode, auction, dates, and cutoff format before this handler
+    calls the application service.
+    Elexon errors are translated to HTTP 502 because the request cannot be
+    fulfilled due to an upstream data-provider failure.
+    """
     try:
         return await build_analysis(start_date, end_date, mode, auction, cutoff_time, cutoff_hour, vintage_time)
     except ElexonError as exc:

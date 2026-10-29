@@ -9,6 +9,15 @@ from typing import Any, Dict, List
 
 
 def energy_metrics(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate descriptive energy-error metrics for comparable products.
+
+    Only ``matched`` and ``source_allocated`` products are comparable because
+    both a selected forecast energy value and an actual energy value exist.
+    Signed error follows the dashboard convention: forecast MWh minus actual MWh.
+
+    WAPE is a historical accuracy description and is never interpreted as a
+    recommended procurement buffer or a future-error prediction.
+    """
     comparable = [row for row in rows if row["status"] in {"matched", "source_allocated"}]
     forecast_total = sum(row["forecast_mwh"] for row in rows if row["forecast_mwh"] is not None)
     actual_total = sum(row["actual_mwh"] for row in rows if row["actual_mwh"] is not None)
@@ -21,6 +30,11 @@ def energy_metrics(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def daily_summaries(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Group auction-product rows by UTC delivery date and calculate each total.
+
+    Calling ``energy_metrics`` for each group keeps daily and whole-window metric
+    definitions identical.
+    """
     grouped: Dict[date, List[Dict[str, Any]]] = defaultdict(list)
     for row in rows:
         grouped[datetime.fromisoformat(row["start_time"].replace("Z", "+00:00")).date()].append(row)
