@@ -221,7 +221,12 @@ dojyan/
 │   │   ├── analysis.py        # Forecast selection, matching, and metrics
 │   │   ├── cache.py           # Persistent fresh and stale response cache
 │   │   ├── elexon.py          # Elexon HTTP client, cache integration, and parsing
-│   │   └── main.py            # FastAPI routes and response assembly
+│   │   ├── energy_metrics.py  # Product energy metrics and daily summaries
+│   │   ├── products.py        # Auction-product construction and serialisation
+│   │   ├── services.py        # Analysis and vintage application services
+│   │   ├── window.py          # Date-window validation and ISO formatting
+│   │   ├── routes/            # Health, analysis, and vintage HTTP routes
+│   │   └── main.py            # FastAPI application composition
 │   ├── tests/
 │   │   ├── test_analysis.py
 │   │   ├── test_api.py
@@ -238,10 +243,15 @@ dojyan/
 │   └── vite.config.js         # Development proxy for the API
 ├── challenge.docx
 ├── docker-compose.yml
+├── vercel.json                # Vercel Services configuration and API rewrites
 └── README.md
 ```
 
 ## 8. API reference
+
+Interactive Swagger documentation is available at `/api/docs`.
+
+The OpenAPI document is available at `/api/openapi.json`, and ReDoc is available at `/api/redoc`.
 
 ### Health check
 
@@ -390,6 +400,24 @@ The present implementation applies the same fresh and stale policy to all source
 
 It does not yet classify completed historical delivery windows as permanently immutable.
 
+### Vercel deployment
+
+`vercel.json` deploys the React Vite frontend and FastAPI backend as two Vercel Services in one project.
+
+The `/api` and `/api/*` routes are rewritten to the FastAPI service without changing the path seen by FastAPI.
+
+The `/health` route is also rewritten to the FastAPI service.
+
+All remaining routes are served by the Vite frontend service.
+
+This preserves same-origin browser API calls, so the deployed frontend continues to use relative `/api` URLs.
+
+Vercel Functions do not use Docker's persistent named volume.
+
+The disk response cache therefore remains useful within a warm function instance, but it is not durable across Vercel function lifecycle events.
+
+A production deployment that needs durable shared caching should use a managed cache or database-backed cache.
+
 ## 12. Verification and automated tests
 
 Run the backend test suite:
@@ -424,7 +452,8 @@ curl -f "http://localhost:5173/api/analysis?start_date=2026-01-01&end_date=2026-
 - The dashboard does not calculate bids, demand, prices, imbalance charges, PnL, uncertainty bands, or recommended energy volumes.
 - The dashboard does not infer why an individual post-delivery `WINDFOR` record was later published because the source row does not expose a reason code.
 - The cache does not yet have a permanent immutable-history policy.
-- The repository does not currently include user authentication, rate limiting, or deployment manifests for Vercel or Heroku.
+- The repository does not currently include application user authentication or rate limiting.
+- The Vercel deployment is configured, but its deployment-protection setting and Git integration are managed in Vercel rather than in this repository.
 
 ## 14. AI disclosure
 

@@ -26,8 +26,8 @@ def test_analysis_returns_an_operational_view(monkeypatch) -> None:
             Forecast(utc(20, 1), utc(19, 0), 160.0),
         ]
 
-    monkeypatch.setattr("app.main.ElexonClient.actuals", fake_actuals)
-    monkeypatch.setattr("app.main.ElexonClient.forecasts", fake_forecasts)
+    monkeypatch.setattr("app.services.ElexonClient.actuals", fake_actuals)
+    monkeypatch.setattr("app.services.ElexonClient.forecasts", fake_forecasts)
 
     response = TestClient(app).get("/api/analysis?start_date=2026-01-20&end_date=2026-01-20&cutoff_hour=12")
 
@@ -42,6 +42,13 @@ def test_analysis_returns_an_operational_view(monkeypatch) -> None:
     assert payload["selection"]["mode"] == "decision"
 
 
+def test_openapi_document_is_exposed_under_api_prefix() -> None:
+    response = TestClient(app).get("/api/openapi.json")
+
+    assert response.status_code == 200
+    assert response.json()["info"]["title"] == "WindDesk API"
+
+
 def test_analysis_accepts_dates_outside_the_january_demo(monkeypatch) -> None:
     async def fake_actuals(self, start, end):
         return []
@@ -49,8 +56,8 @@ def test_analysis_accepts_dates_outside_the_january_demo(monkeypatch) -> None:
     async def fake_forecasts(self, start, end, publish_from, publish_to):
         return []
 
-    monkeypatch.setattr("app.main.ElexonClient.actuals", fake_actuals)
-    monkeypatch.setattr("app.main.ElexonClient.forecasts", fake_forecasts)
+    monkeypatch.setattr("app.services.ElexonClient.actuals", fake_actuals)
+    monkeypatch.setattr("app.services.ElexonClient.forecasts", fake_forecasts)
     response = TestClient(app).get("/api/analysis?start_date=2026-02-01&end_date=2026-02-01")
     assert response.status_code == 200
 
@@ -62,8 +69,8 @@ def test_epex_30_applies_hourly_source_rate_to_each_product(monkeypatch) -> None
     async def fake_forecasts(self, start, end, publish_from, publish_to):
         return [Forecast(utc(20, 0), utc(19, 0), 120.0)]
 
-    monkeypatch.setattr("app.main.ElexonClient.actuals", fake_actuals)
-    monkeypatch.setattr("app.main.ElexonClient.forecasts", fake_forecasts)
+    monkeypatch.setattr("app.services.ElexonClient.actuals", fake_actuals)
+    monkeypatch.setattr("app.services.ElexonClient.forecasts", fake_forecasts)
     response = TestClient(app).get("/api/analysis?start_date=2026-01-20&end_date=2026-01-20&auction=epex_30")
     assert response.status_code == 200
     first, second = response.json()["products"][:2]
